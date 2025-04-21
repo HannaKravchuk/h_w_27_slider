@@ -1,4 +1,3 @@
-
 const slides = document.querySelectorAll('.slide');
 const pauseBtn = document.getElementById('pause');
 const prevBtn = document.getElementById('prev');
@@ -8,6 +7,8 @@ let currentSlide = 0;
 let isPlaying = true;
 let timerId = null;
 const INTERVAL = 2000;
+let touchStartX = 0;
+let touchEndX = 0;
 
 function createIndicators() {
     slides.forEach((_, index) => {
@@ -64,5 +65,48 @@ document.querySelector('.header__slider').addEventListener('mouseleave', () => {
     if (isPlaying) playSlider();
 });
 
+document.querySelector('.header__slider').addEventListener('touchstart', (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+}, { passive: true });
+
+document.querySelector('.header__slider').addEventListener('touchend', (e) => {
+    touchEndX = e.changedTouches[0].screenX;
+    handleSwipe();
+}, { passive: true });
+
+function handleSwipe() {
+    const SWIPE_THRESHOLD = 50; 
+    
+    if (touchEndX < touchStartX - SWIPE_THRESHOLD) {
+        pauseSlider();
+        gotoSlide(currentSlide + 1);
+    } else if (touchEndX > touchStartX + SWIPE_THRESHOLD) {
+        pauseSlider();
+        gotoSlide(currentSlide - 1);
+    }
+}
+
+document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    
+    switch (e.code) {
+        case 'ArrowLeft':
+ 
+            pauseSlider();
+            gotoSlide(currentSlide - 1);
+            break;
+        case 'ArrowRight':
+            pauseSlider();
+            gotoSlide(currentSlide + 1);
+            break;
+        case 'Space':
+            e.preventDefault(); 
+            isPlaying ? pauseSlider() : playSlider();
+            break;
+    }
+});
+
 createIndicators();
 startSlider();
+prevBtn.addEventListener('focus', () => pauseSlider());
+nextBtn.addEventListener('focus', () => pauseSlider());
