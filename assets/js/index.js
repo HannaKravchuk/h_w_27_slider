@@ -1,124 +1,178 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const slides = document.querySelectorAll('.slide');
-    const pauseBtn = document.getElementById('pause');
-    const prevBtn = document.getElementById('prev');
-    const nextBtn = document.getElementById('next');
-    const indicatorsContainer = document.querySelector('.slides-indicators');
-    const slider = document.querySelector('.header__slider');
-    let currentSlide = 0;
-    let isPlaying = true;
-    let timerId = null;
-    let touchStartX = 0;
-    let touchEndX = 0;
-    const INTERVAL = 2000;
-    const SWIPE_THRESHOLD = 50;
+    const config = {
+        interval: 2000,
+        swipeThreshold: 50,
+        dragThreshold: 30
+    };
 
-    function initSlider() {
+    const elements = {
+        slider: document.querySelector('.header__slider'),
+        slides: document.querySelectorAll('.slide'),
+        pauseBtn: document.getElementById('pause'),
+        prevBtn: document.getElementById('prev'),
+        nextBtn: document.getElementById('next'),
+        indicatorsContainer: document.querySelector('.slides-indicators')
+    };
+
+    const state = {
+        currentSlide: 0,
+        isPlaying: true,
+        timerId: null,
+        isDragging: false,
+        startX: 0,
+        currentX: 0
+    };
+
+    function init() {
         createIndicators();
-        startSlider();
         setupEventListeners();
+        startSlider();
+        setAccessibility();
     }
 
     function createIndicators() {
-        slides.forEach((_, index) => {
+        elements.slides.forEach((_, index) => {
             const indicator = document.createElement('div');
-            indicator.classList.add('indicator');
-            if (index === currentSlide) indicator.classList.add('active');
+            indicator.className = 'indicator';
+            if (index === state.currentSlide) indicator.classList.add('active');
             indicator.addEventListener('click', () => gotoSlide(index));
-            indicatorsContainer.appendChild(indicator);
+            elements.indicatorsContainer.appendChild(indicator);
         });
     }
 
     function gotoSlide(index) {
-        slides[currentSlide].classList.remove('active');
-        document.querySelectorAll('.indicator')[currentSlide].classList.remove('active');
+        elements.slides[state.currentSlide].classList.remove('active');
+        document.querySelectorAll('.indicator')[state.currentSlide].classList.remove('active');
         
-        currentSlide = (index + slides.length) % slides.length;
+        state.currentSlide = (index + elements.slides.length) % elements.slides.length;
         
-        slides[currentSlide].classList.add('active');
-        document.querySelectorAll('.indicator')[currentSlide].classList.add('active');
+        elements.slides[state.currentSlide].classList.add('active');
+        document.querySelectorAll('.indicator')[state.currentSlide].classList.add('active');
     }
-
     function startSlider() {
-        timerId = setInterval(() => gotoSlide(currentSlide + 1), INTERVAL);
+        if (state.timerId) clearInterval(state.timerId);
+        state.timerId = setInterval(() => gotoSlide(state.currentSlide + 1), config.interval);
+        state.isPlaying = true;
+        elements.pauseBtn.textContent = '⏸';
     }
 
     function pauseSlider() {
-        clearInterval(timerId);
-        isPlaying = false;
-        pauseBtn.textContent = '▶';
-        pauseBtn.setAttribute('aria-label', 'Play');
-    }
-
-    function playSlider() {
-        isPlaying = true;
-        pauseBtn.textContent = '⏸';
-        pauseBtn.setAttribute('aria-label', 'Pause');
-        startSlider();
-    }
-
-    function handleSwipe() {
-        if (touchEndX < touchStartX - SWIPE_THRESHOLD) {
-            pauseSlider();
-            gotoSlide(currentSlide + 1);
-        } else if (touchEndX > touchStartX + SWIPE_THRESHOLD) {
-            pauseSlider();
-            gotoSlide(currentSlide - 1);
-        }
+        clearInterval(state.timerId);
+        state.isPlaying = false;
+        elements.pauseBtn.textContent = '▶';
     }
 
     function setupEventListeners() {
-        pauseBtn.addEventListener('click', () => isPlaying ? pauseSlider() : playSlider());
-        prevBtn.addEventListener('click', () => {
-            pauseSlider();
-            gotoSlide(currentSlide - 1);
-        });
-        nextBtn.addEventListener('click', () => {
-            pauseSlider();
-            gotoSlide(currentSlide + 1);
-        });
+        elements.pauseBtn.addEventListener('click', togglePlay);
+        elements.prevBtn.addEventListener('click', () => { pauseSlider(); gotoSlide(state.currentSlide - 1); });
+        elements.nextBtn.addEventListener('click', () => { pauseSlider(); gotoSlide(state.currentSlide + 1); });
 
-        slider.addEventListener('mouseenter', pauseSlider);
-        slider.addEventListener('mouseleave', () => isPlaying && playSlider());
+        elements.slider.addEventListener('mouseenter', pauseSlider);
+        elements.slider.addEventListener('mouseleave', () => state.isPlaying && startSlider());
 
-        slider.addEventListener('touchstart', (e) => {
-            touchStartX = e.changedTouches[0].screenX;
-        }, { passive: true });
+        elements.slider.addEventListener('touchstart', handleTouchStart, { passive: true });
+        elements.slider.addEventListener('touchmove', handleTouchMove, { passive: false });
+        elements.slider.addEventListener('touchend', handleTouchEnd);
 
-        slider.addEventListener('touchend', (e) => {
-            touchEndX = e.changedTouches[0].screenX;
-            handleSwipe();
-        }, { passive: true });
+        elements.slider.addEventListener('mousedown', handleMouseDown);
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
 
-        slider.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-        }, { passive: false });
-
-        document.addEventListener('keydown', (e) => {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-            
-            switch (e.code) {
-                case 'ArrowLeft':
-                    pauseSlider();
-                    gotoSlide(currentSlide - 1);
-                    break;
-                case 'ArrowRight':
-                    pauseSlider();
-                    gotoSlide(currentSlide + 1);
-                    break;
-                case 'Space':
-                    e.preventDefault();
-                    isPlaying ? pauseSlider() : playSlider();
-                    break;
-            }
-        });
-
-        prevBtn.addEventListener('focus', pauseSlider);
-        nextBtn.addEventListener('focus', pauseSlider);
-        pauseBtn.setAttribute('aria-label', isPlaying ? 'Pause' : 'Play');
-        prevBtn.setAttribute('aria-label', 'Previous slide');
-        nextBtn.setAttribute('aria-label', 'Next slide');
+        document.addEventListener('keydown', handleKeyDown);
     }
 
-    initSlider();
+    function handleTouchStart(e) {
+        state.startX = e.touches[0].clientX;
+        state.currentX = state.startX;
+    }
+
+    function handleTouchMove(e) {
+        if (!state.isDragging) {
+            const diff = Math.abs(e.touches[0].clientX - state.startX);
+            if (diff > config.dragThreshold) {
+                state.isDragging = true;
+                pauseSlider();
+            }
+        }
+        
+        if (state.isDragging) {
+            e.preventDefault();
+            state.currentX = e.touches[0].clientX;
+        }
+    }
+
+    function handleTouchEnd() {
+        if (state.isDragging) {
+            handleDragEnd();
+            state.isDragging = false;
+        }
+    }
+
+    function handleMouseDown(e) {
+        state.isDragging = true;
+        state.startX = e.clientX;
+        state.currentX = state.startX;
+        pauseSlider();
+        e.preventDefault();
+    }
+
+    function handleMouseMove(e) {
+        if (state.isDragging) {
+            state.currentX = e.clientX;
+        }
+    }
+
+    function handleMouseUp() {
+        if (state.isDragging) {
+            handleDragEnd();
+            state.isDragging = false;
+        }
+    }
+
+    function handleDragEnd() {
+        const diff = state.currentX - state.startX;
+        
+        if (Math.abs(diff) > config.swipeThreshold) {
+            if (diff < 0) {
+                gotoSlide(state.currentSlide + 1); 
+            } else {
+                gotoSlide(state.currentSlide - 1); 
+            }
+        }
+        
+        if (state.isPlaying) {
+            startSlider();
+        }
+    }
+
+    function handleKeyDown(e) {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        
+        switch (e.code) {
+            case 'ArrowLeft':
+                pauseSlider();
+                gotoSlide(state.currentSlide - 1);
+                break;
+            case 'ArrowRight':
+                pauseSlider();
+                gotoSlide(state.currentSlide + 1);
+                break;
+            case 'Space':
+                e.preventDefault();
+                togglePlay();
+                break;
+        }
+    }
+
+    function togglePlay() {
+        state.isPlaying ? pauseSlider() : startSlider();
+    }
+
+    function setAccessibility() {
+        elements.pauseBtn.setAttribute('aria-label', state.isPlaying ? 'Pause' : 'Play');
+        elements.prevBtn.setAttribute('aria-label', 'Previous slide');
+        elements.nextBtn.setAttribute('aria-label', 'Next slide');
+    }
+
+    init();
 });
