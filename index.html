@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slider</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <header class="container header__container">
+        <div class="header__top">
+            <div class="header__navbar">
+                <ol class="header__navbar-list">
+                    <li class="header__navbar-item"><a href="#" class="header__navbar-link">Home</a></li>
+                    <li class="header__navbar-item"><a href="#" class="header__navbar-link">About</a></li>
+                    <li class="header__navbar-item"><a href="#" class="header__navbar-link">Contact</a></li>
+                </ol>
+            </div>
+            <div class="header__logo">
+                <img src="assets/img/logo.jpg" alt="logo" class="header__logo-img">
+            </div>
+        </div>
+        <div class="header__slider">
+            <ul id="slides" class="slides">
+                <li class="slide active">
+                    <img src="assets/img/1.avif" alt="01" class="slides__img">
+                    Slide 1
+                </li>
+                <li class="slide">
+                    <img src="assets/img/2.avif" alt="02" class="slides__img">
+                    Slide 2
+                </li>
+                <li class="slide">
+                    <img src="assets/img/3.avif" alt="03" class="slides__img">
+                    Slide 3
+                </li>
+                <li class="slide">
+                    <img src="assets/img/4.avif" alt="04" class="slides__img">
+                    Slide 4
+                </li>
+                <li class="slide">
+                    <img src="assets/img/5.avif" alt="05" class="slides__img">
+                    Slide 5
+                </li>
+            </ul>
+         
+            <div class="slider-controls">
+                <button id="prev" class="slide-nav slide-nav--prev">❮</button>
+                <button id="next" class="slide-nav slide-nav--next">❯</button>
+                <button id="pause" class="pause">⏸</button>
+            </div>
+            <div class="slides-indicators"></div>
+        </div>
+    </header>
+    <script src="assets/js/index.js" type="module"></script>
+</body>
+</html>

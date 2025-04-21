@@ -1,0 +1,29 @@
+{
+    "name": "js-native-slider",
+    "version": "1.0.0",
+    "main": "index.js",
+    "repository": "https://github.com/Alecto/js-native-slider.git",
+    "author": "Alecto <fomenkoandrey@inbox.ru>",
+    "license": "MIT",
+    "scripts": {
+        "start": "gulp serve",
+        "build": "gulp build",
+        "lint": "gulp lintJS",
+        "sass": "gulp scssCompile"
+    },
+    "devDependencies": {
+        "@eslint/js": "^9.23.0",
+        "browser-sync": "^3.0.4",
+        "eslint": "^9.23.0",
+        "eslint-plugin-react": "^7.37.4",
+        "globals": "^16.0.0",
+        "gulp": "^5.0.0",
+        "gulp-eslint": "^6.0.0",
+        "gulp-sass": "^6.0.1",
+        "sass": "^1.86.2",
+        "typescript-eslint": "^8.29.0"
+    },
+    "dependencies": {
+        "@fortawesome/fontawesome-free": "^5.13.0"
+    }
+}
